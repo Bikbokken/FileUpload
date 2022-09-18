@@ -1,0 +1,39 @@
+﻿@using System.IO
+@using Microsoft.AspNetCore.Hosting
+
+<InputFile OnChange="@UploadFile" accept=".mp3, .waw"></InputFile>
+
+<p>@IsLoading</p>
+
+
+
+@if(FileUploaded != null)
+{
+
+    <p>@FileUploaded.Name</p>
+    <p>@FileUploaded.LastModified</p>
+    <p>@FileUploaded.Size</p>
+    <p>@FileUploaded.ContentType</p>
+}
+
+@code{
+    public bool IsLoading { get; set; }
+    public IBrowserFile FileUploaded { get; set; }
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        try {
+            IsLoading = false;
+            var path = Path.Combine("unsafe_uploads", e.File.Name);
+            await using FileStream fs = new(path, FileMode.Create);
+            await e.File.OpenReadStream(99999999).CopyToAsync(fs);
+            
+            IsLoading = true;
+            FileUploaded = e.File;
+        } catch(Exception ex)
+        {
+            Console.WriteLine("Fejl " + ex);
+            IsLoading = false;
+        }
+    }
+}
